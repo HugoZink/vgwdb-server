@@ -8,6 +8,7 @@ var logger = require('morgan');
 var neodb = require('./config/neo.db');
 //var userroutes_v1 = require('./api/user.routes.v1');
 var gameroutes_v1 = require('./api/game.routes.v1');
+var weaponroutes_v1 = require('./api/weapon.routes.v1');
 
 // var auth_routes_v1 = require('./api/authentication.routes.v1');
 var config = require('./config/env/env');
@@ -71,6 +72,7 @@ app.use(function (req, res, next) {
 // Installeer de routers
 // app.use('/api/v1', auth_routes_v1);
 app.use('/api/v1', gameroutes_v1);
+app.use('/api/v1', weaponroutes_v1);
 
 // Errorhandler voor express-jwt errors
 // Wordt uitgevoerd wanneer err != null; anders door naar next().

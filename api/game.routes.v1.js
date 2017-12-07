@@ -1,15 +1,15 @@
 var express = require('express');
 var routes = express.Router();
-var Game = require('../model/game.model');
-
 var neodb = require('../config/neo.db');
+
+var Game = require('../model/game.model');
 
 routes.get('/games', function(req, res){
     res.contentType('application/json');
 
     let games = [];
 
-    var session = neodb.session();
+    let session = neodb.session();
 
     //Get all games, along with their developer and their featured weapons.
     let query = `MATCH (g:Game)<-[rd:DEVELOPED]-(d:Developer)
@@ -39,7 +39,7 @@ routes.get('/games', function(req, res){
 
 routes.get('/games/:id', function(req, res){
 
-    var session = neodb.session();
+    let session = neodb.session();
 
     //Get a single game, along with its developer and its featured weapons.
     let query = `MATCH (g:Game)<-[rd:DEVELOPED]-(d:Developer)
