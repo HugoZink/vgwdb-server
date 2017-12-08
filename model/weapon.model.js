@@ -1,8 +1,7 @@
 class Weapon {
-    constructor(id, name, designed, manufacturer, games) {
+    constructor(id, name, manufacturer, games, document) {
         this.id = id;
         this.name = name;
-        this.designed = designed;
         this.manufacturer = manufacturer;
         this.games = games;
 
@@ -12,6 +11,13 @@ class Weapon {
 
         for(let game of this.games) {
             game.id = game.id.toNumber();
+        }
+
+        //Fetch data from MongoDB document (if it exists)
+        if(document) {
+            this.description = document.description;
+            this.designed = document.designed;
+            this.imagePath = document.imagePath;
         }
     }
 }

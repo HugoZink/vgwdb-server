@@ -6,6 +6,7 @@ var express = require('express');
 var bodyParser = require('body-parser')
 var logger = require('morgan');
 var neodb = require('./config/neo.db');
+var mongodb = require('./config/mongo.db');
 //var userroutes_v1 = require('./api/user.routes.v1');
 var gameroutes_v1 = require('./api/game.routes.v1');
 var weaponroutes_v1 = require('./api/weapon.routes.v1');

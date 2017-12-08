@@ -4,7 +4,7 @@ var env = {
     dbPort: process.env.DB_PORT || '',
     dbUser: process.env.DB_USER || '',
     dbPassword: process.env.DB_PASSWORD || '',
-    dbDatabase: process.env.DB_DATABASE || 'users',
+    dbDatabase: process.env.DB_DATABASE || 'vgwdb',
     neoDbUri: process.env.NEO_DB_URI || 'bolt://localhost',
     neoDbUser: process.env.NEO_DB_USER || 'neo4j',
     neoDbPassword: process.env.NEO_DB_PASSWORD || 'password'
