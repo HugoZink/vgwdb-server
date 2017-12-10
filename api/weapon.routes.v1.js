@@ -249,8 +249,6 @@ routes.delete('/weapons/:id', function(req, res){
 
         WeaponDocument.findByIdAndRemove(documentId, function(err, weapon){
 
-            console.log('Tried to delete weapon');
-
             if(err)
                 throw err;
 
