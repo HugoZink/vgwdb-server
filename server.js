@@ -99,7 +99,6 @@ app.use('*', function (req, res) {
 // Installatie klaar; start de server.
 app.listen(config.env.webPort, function () {
     console.log('De server luistert op port ' + app.get('port'));
-    console.log('Zie bijvoorbeeld http://localhost:3000/api/v1/users');
 });
 
 // Voor testen met mocha/chai moeten we de app exporteren.
