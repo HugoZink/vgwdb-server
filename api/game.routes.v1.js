@@ -15,7 +15,7 @@ routes.get('/games', function(req, res){
 
     //Get all games, along with their developer and their featured weapons.
     let query = `MATCH (g:Game)<-[rd:DEVELOPED]-(d:Developer)
-    MATCH (g)-[rw:FEATURES]->(w:Weapon)
+    OPTIONAL MATCH (g)-[rw:FEATURES]->(w:Weapon)
     RETURN ID(g) AS id, g.name AS name,
     { id: ID(d), name: d.name } AS developer,
     collect({ id: ID(w), name: w.name, ingameName: rw.ingameName, documentId: w.documentId }) AS weapons,
@@ -59,7 +59,7 @@ routes.get('/games/:id', function(req, res){
 
     //Get a single game, along with its developer and its featured weapons.
     let query = `MATCH (g:Game)<-[rd:DEVELOPED]-(d:Developer)
-    MATCH (g)-[rw:FEATURES]->(w:Weapon)
+    OPTIONAL MATCH (g)-[rw:FEATURES]->(w:Weapon)
     WHERE ID(g) = {id}
     RETURN ID(g) AS id, g.name AS name,
     { id: ID(d), name: d.name } AS developer,
