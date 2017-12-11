@@ -165,6 +165,8 @@ routes.post('/weapons', function(req, res){
                         res.status(201).json(responseArr);
                     }
                 }
+
+                session.close();
             });
         });
     }
@@ -175,34 +177,73 @@ routes.put('/weapons/:id', function(req, res){
 
     res.contentType('application/json');
 
-    let session = neodb.session;
+    let session = neodb.session();
 
+    //Find the given weapon, then update it.
     let query = `MATCH (w:Weapon)<-[:MANUFACTURES]-(m:Manufacturer)
     WHERE ID(w) = {id}
-    OPTIONAL MATCH (w)<-[rw:FEATURES]-(g:Game)
-    SET w.name = '{newName}'
+    OPTIONAL MATCH (w)<-[rw:FEATURES]-(:Game)
+    SET w.name = {newName}
     RETURN ID(w) AS id, w.name AS name,
     {id: ID(m), name: m.name} AS manufacturer,
-    collect({id: ID(g), name: g.name, ingameName: rw.ingameName}) AS games,
     w.documentId AS documentId;`;
 
-    session.run(query, {id: Number(req.params.id), newName: req.body.name})
-    .then(function(records){
+    session.run(query, {id: Number(req.params.id), newName: req.body.name, games: req.body.games})
+    .then(function(result){
 
-        let record = records[0];
+        let record = result.records[0];
 
-        let weaponDoc = WeaponDocument.findById(record._fields[4]);
+        WeaponDocument.findById(record._fields[3], function(err, weaponDoc){
+            weaponDoc.name = req.body.name;
+            weaponDoc.designed = req.body.designed;
+            weaponDoc.imagePath = req.body.imagePath;
+            weaponDoc.description = req.body.description;
+    
+            weaponDoc.save(function(err, newDoc){
 
-        weaponDoc.name = req.body.name;
-        weaponDoc.designed = req.body.designed;
-        weaponDoc.imagePath = req.body.imagePath;
-        weaponDoc.description = req.body.description;
+                let relationsParams = {id: Number(req.params.id)};
 
-        weaponDoc.save().then(function(newDoc){
+                //Update relationships.
+                let relationsQuery = `MATCH (w:Weapon)
+                WHERE ID(w) = {id}
+                OPTIONAL MATCH (w)<-[rg:FEATURES]-(g:Game)
+                DELETE rg`;
 
-            let response = new Weapon(record._fields[0], record._fields[1], record._fields[2], record._fields[3], newDoc);
+                //Only create new relationships if the user has chosen to do so.
+                if(req.body.games.length > 0) {
 
-            res.status(202).json(response);
+                    console.log('New node has relationships');
+
+                    relationsParams.games = req.body.games;
+                    relationsQuery += `
+                    WITH DISTINCT w
+                    UNWIND {games} AS game
+                    MERGE (g:Game{name: game.name})
+                    MERGE (w)<-[rg:FEATURES{ingameName: game.ingameName}]-(g)
+                    RETURN collect({id: ID(g), name: g.name, ingameName: rg.ingameName}) AS games`;
+                }
+                else {
+
+                    console.log('New node has NO relationships');
+
+                    relationsQuery += `
+                    WITH rg, g
+                    RETURN collect({id: ID(g), name: g.name, ingameName: rg.ingameName}) AS games`;
+                }
+
+                session.run(relationsQuery, relationsParams)
+                .then(function(result){
+
+                    let games = result.records[0]._fields[0];
+
+                    let response = new Weapon(record._fields[0], record._fields[1], record._fields[2], games, newDoc);
+                    
+                    res.status(202).json(response);
+        
+                    session.close();
+
+                });
+            });
         });
     });
 });
@@ -253,6 +294,8 @@ routes.delete('/weapons/:id', function(req, res){
                 throw err;
 
             res.status(204).end();
+
+            session.close();
         });
     });
 });
