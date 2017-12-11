@@ -157,7 +157,7 @@ routes.post('/weapons', function(req, res){
                 //If only a single weapon was posted, return the new object right now.
                 //Otherwise, add it to an array, and post it if it was the last one.
                 if(!arrayPosted) {
-                    res.status(200).json(newWeapon);
+                    res.status(201).json(newWeapon);
                 }
                 else {
                     responseArr.push(newWeapon);
