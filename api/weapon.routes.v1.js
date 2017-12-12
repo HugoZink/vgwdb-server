@@ -295,8 +295,6 @@ routes.delete('/weapons/:id', function(req, res){
 
         let documentId = result.records[0]._fields[0];
 
-        console.log(documentId);
-
         WeaponDocument.findByIdAndRemove(documentId, function(err, weapon){
 
             if(err)
