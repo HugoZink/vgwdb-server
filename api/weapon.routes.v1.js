@@ -201,13 +201,14 @@ routes.put('/weapons/:id', function(req, res){
     
             weaponDoc.save(function(err, newDoc){
 
-                let relationsParams = {id: Number(req.params.id)};
+                let relationsParams = {id: Number(req.params.id), manufacturerName: req.body.manufacturer.name};
 
                 //Update relationships.
                 let relationsQuery = `MATCH (w:Weapon)
                 WHERE ID(w) = {id}
                 OPTIONAL MATCH (w)<-[rg:FEATURES]-(g:Game)
-                DELETE rg`;
+                OPTIONAL MATCH (m:Manufacturer)-[rm:MANUFACTURES]->(w)
+                DELETE rg, rm`;
 
                 //Only create new relationships if the user has chosen to do so.
                 if(req.body.games.length > 0) {
@@ -219,8 +220,11 @@ routes.put('/weapons/:id', function(req, res){
                     WITH DISTINCT w
                     UNWIND {games} AS game
                     MERGE (g:Game{name: game.name})
+                    MERGE (m:Manufacturer{name: {manufacturerName}})
                     MERGE (w)<-[rg:FEATURES{ingameName: game.ingameName}]-(g)
-                    RETURN collect({id: ID(g), name: g.name, ingameName: rg.ingameName}) AS games`;
+                    MERGE (w)<-[rm:MANUFACTURES]-(m)
+                    RETURN collect({id: ID(g), name: g.name, ingameName: rg.ingameName}) AS games,
+                    {id: ID(m), name: m.name} AS manufacturer`;
                 }
                 else {
 
@@ -228,15 +232,20 @@ routes.put('/weapons/:id', function(req, res){
 
                     relationsQuery += `
                     WITH rg, g
-                    RETURN collect({id: ID(g), name: g.name, ingameName: rg.ingameName}) AS games`;
+                    WITH DISTINCT w
+                    MERGE (m:Manufacturer{name: {manufacturerName}})
+                    MERGE (w)<-[rm:MANUFACTURES]-(m)
+                    RETURN collect({id: ID(g), name: g.name, ingameName: rg.ingameName}) AS games
+                    {id: ID(m), name: m.name} AS manufacturer`;
                 }
 
                 session.run(relationsQuery, relationsParams)
                 .then(function(result){
 
                     let games = result.records[0]._fields[0];
+                    let manufacturer = result.records[0]._fields[1];
 
-                    let response = new Weapon(record._fields[0], record._fields[1], record._fields[2], games, newDoc);
+                    let response = new Weapon(record._fields[0], record._fields[1], manufacturer, games, newDoc);
                     
                     res.status(202).json(response);
         
