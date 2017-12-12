@@ -98,6 +98,9 @@ app.use('*', function (req, res) {
     });
 });
 
+//Errors inside promises are amazingly unhelpful. This line should give a little more insight.
+process.on('unhandledRejection', r => console.log(r));
+
 // Installatie klaar; start de server.
 app.listen(config.env.webPort, function () {
     console.log('De server luistert op port ' + app.get('port'));
