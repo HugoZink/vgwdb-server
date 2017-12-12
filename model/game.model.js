@@ -9,8 +9,10 @@ class Game {
         this.id = this.id.toNumber();
         this.developer.id = this.developer.id.toNumber();
         
-        for(let weapon of this.weapons){
-            weapon.id = weapon.id.toNumber();
+        if(this.weapons && this.weapons.length > 0 && this.weapons[0].id){
+            for(let weapon of this.weapons){
+                weapon.id = weapon.id.toNumber();
+            }
         }
 
         //Fetch data from MongoDB document (if it exists)
