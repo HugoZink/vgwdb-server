@@ -177,10 +177,10 @@ routes.put('/games/:id', function(req, res){
     WITH g
     MATCH (d:Developer)-[rd:DEVELOPED]->(g)
     DELETE rd
-    WITH g
+    WITH g, d
     MATCH (d:Developer{name: {developerName}})
     MERGE (d)-[:DEVELOPED]->(g)
-    WITH g
+    WITH g, d
     OPTIONAL MATCH (g)-[rw:FEATURES]->(w:Weapon)
     RETURN ID(g) AS id, g.name AS name,
     {id: ID(d), name: d.name} AS developer,
@@ -188,13 +188,16 @@ routes.put('/games/:id', function(req, res){
     g.documentId AS documentId`;
 
     //Update node in neo4j database
-    session.run(query, {id: req.params.id, newName: req.body.name, developerName: req.body.developer.name})
+    session.run(query, {id: Number(req.params.id), newName: req.body.name, developerName: req.body.developer.name})
     .then(function(result){
 
         let record = result.records[0];
 
         //Find game document in Mongo database
-        GameDocument.findById(record._fields[3], function(err, gameDoc){
+        GameDocument.findById(record._fields[4], function(err, gameDoc){
+
+            if(err)
+                throw err;
 
             gameDoc.name = req.body.name;
             gameDoc.released = req.body.released;
@@ -210,6 +213,33 @@ routes.put('/games/:id', function(req, res){
 
                 session.close();
             });
+        });
+    });
+});
+
+//Delete a game
+routes.delete('/games/:id', function(req, res){
+    let session = neodb.session();
+
+    //Delete game, but fetch the document ID to delete it from Mongo too.
+    let query = `MATCH (g:Game)
+    WHERE ID(g) = {id}
+    WITH g, g.documentId AS documentId
+    DETACH DELETE g
+    RETURN documentId`;
+
+    session.run(query, {id: Number(req.params.id)})
+    .then(function(result){
+        let documentId = result.records[0]._fields[0];
+
+        GameDocument.findByIdAndRemove(documentId, function(err, game){
+
+            if(err)
+                throw err;
+
+            res.status(204).end();
+
+            session.close();
         });
     });
 });
