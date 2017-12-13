@@ -88,4 +88,74 @@ routes.get('/games/:id', function(req, res){
     });
 });
 
+//Create game/games
+routes.post('/games', function(req, res){
+
+    res.contentType('application/json');
+
+    let games = [];
+
+    //If only a single object was posted, wrap it in an array.
+    //This prevents code duplication by still entering the for loop.
+    let arrayPosted = false;
+    if(req.body instanceof Array) {
+        games = req.body;
+        arrayPosted = true;
+    }
+    else {
+        games = [req.body];
+    }
+
+    let session = neodb.session();
+
+    //Neo4j query for inserting games and linking to developer
+    let query = `CREATE (g:Game{name: {gameName}, documentId: {documentId}})
+    MATCH (d:Developer{name: {devName}})
+    MERGE (d)-[:DEVELOPED]->(g)
+    RETURN ID(g) AS id, g.name AS name,
+    {id: ID(d), name: d.name} AS developer`;
+
+    //If multiple games were posted, this array will hold all newly created games.
+    let responseArr = [];
+
+    for(let game of games) {
+
+        let gameDoc = new GameDocument({
+            name: game.name,
+            released: game.released,
+            imagePath: game.imagePath,
+            description: game.description
+        });
+
+        //Save details in Mongo database, then use document ID to save it in neo4j
+        gameDoc.save().then(function(newGameDoc){
+
+            session.run(query, { 
+                gameName: newGameDoc.name,
+                documentId: newGameDoc._id,
+                devName: game.developer.name
+            })
+            .then(function(result){
+
+                let record = result.records[0];
+
+                let newGame = new Game(record._fields[0], newGameDoc.name, record._fields[2], [], newGameDoc);
+
+                //If only a single game was posted, return the new object right now.
+                //Otherwise, add it to an array, and post it if it was the last one.
+                if(!arrayPosted) {
+                    res.status(201).json(newGame);
+                }
+                else {
+                    responseArr.push(newGame);
+                    if(responseArr.length === req.body.length) {
+                        res.status(201).json(responseArr);
+                    }
+                }
+            });
+
+        });
+    }
+});
+
 module.exports = routes;
