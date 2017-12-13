@@ -153,10 +153,65 @@ routes.post('/games', function(req, res){
                         res.status(201).json(responseArr);
                     }
                 }
+
+                session.close();
             });
 
         });
     }
+});
+
+//Update a game
+routes.put('/games/:id', function(req, res){
+
+    res.contentType('application/json');
+    
+    let session = neodb.session();
+
+    //Find the given game, and update it.
+    //Remove old developer and assign the new one.
+    //Finally, return the new data.
+    let query = `MATCH (g:Game)
+    WHERE ID(g) = {id}
+    SET g.name = {newName}
+    WITH g
+    MATCH (d:Developer)-[rd:DEVELOPED]->(g)
+    DELETE rd
+    WITH g
+    MATCH (d:Developer{name: {developerName}})
+    MERGE (d)-[:DEVELOPED]->(g)
+    WITH g
+    OPTIONAL MATCH (g)-[rw:FEATURES]->(w:Weapon)
+    RETURN ID(g) AS id, g.name AS name,
+    {id: ID(d), name: d.name} AS developer,
+    collect({ id: ID(w), name: w.name, ingameName: rw.ingameName, documentId: w.documentId }) AS weapons,
+    g.documentId AS documentId`;
+
+    //Update node in neo4j database
+    session.run(query, {id: req.params.id, newName: req.body.name, developerName: req.body.developer.name})
+    .then(function(result){
+
+        let record = result.records[0];
+
+        //Find game document in Mongo database
+        GameDocument.findById(record._fields[3], function(err, gameDoc){
+
+            gameDoc.name = req.body.name;
+            gameDoc.released = req.body.released;
+            gameDoc.imagePath = req.body.imagePath;
+            gameDoc.description = req.body.description;
+
+            //Update document in Mongo database
+            gameDoc.save(function(err, newGameDoc){
+                
+                let response = new Game(record._fields[0], newGameDoc.name, record._fields[2], record._fields[3], newGameDoc);
+
+                res.status(202).json(response);
+
+                session.close();
+            });
+        });
+    });
 });
 
 module.exports = routes;
