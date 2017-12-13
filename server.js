@@ -9,6 +9,7 @@ var neodb = require('./config/neo.db');
 var mongodb = require('./config/mongo.db');
 //var userroutes_v1 = require('./api/user.routes.v1');
 var gameroutes_v1 = require('./api/game.routes.v1');
+var developerroutes_v1 = require('./api/developer.routes.v1');
 var weaponroutes_v1 = require('./api/weapon.routes.v1');
 var manufacturerroutes_v1 = require('./api/manufacturer.routes.v1');
 
@@ -74,6 +75,7 @@ app.use(function (req, res, next) {
 // Installeer de routers
 // app.use('/api/v1', auth_routes_v1);
 app.use('/api/v1', gameroutes_v1);
+app.use('/api/v1', developerroutes_v1);
 app.use('/api/v1', weaponroutes_v1);
 app.use('/api/v1', manufacturerroutes_v1);
 
