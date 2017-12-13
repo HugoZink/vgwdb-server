@@ -110,6 +110,7 @@ routes.post('/games', function(req, res){
 
     //Neo4j query for inserting games and linking to developer
     let query = `CREATE (g:Game{name: {gameName}, documentId: {documentId}})
+    WITH g
     MATCH (d:Developer{name: {devName}})
     MERGE (d)-[:DEVELOPED]->(g)
     RETURN ID(g) AS id, g.name AS name,
@@ -132,7 +133,7 @@ routes.post('/games', function(req, res){
 
             session.run(query, { 
                 gameName: newGameDoc.name,
-                documentId: newGameDoc._id,
+                documentId: newGameDoc._id.toString(),
                 devName: game.developer.name
             })
             .then(function(result){

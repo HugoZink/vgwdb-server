@@ -30,6 +30,7 @@
     "jwt-simple": "^0.5.1",
     "moment": "^2.18.1",
     "mongoose": "4.8.x",
+    "mongoose-unique-validator": "^1.0.6",
     "morgan": "^1.8.1",
     "neo4j-driver": "^1.5.0"
   },

@@ -1,10 +1,12 @@
 const mongoose = require('mongoose');
+const uniqueValidator = require('mongoose-unique-validator');
 const Schema = mongoose.Schema;
 
 const GameSchema = new Schema({
     name: {
         type: String,
-        required: true
+        required: true,
+        unique: true
     },
     released: {
         type: Number,
@@ -21,6 +23,9 @@ const GameSchema = new Schema({
 }, {
     timestamps: true
 });
+
+//Add uniqueness validator to schema
+GameSchema.plugin(uniqueValidator);
 
 const Game = mongoose.model('game', GameSchema);
 
