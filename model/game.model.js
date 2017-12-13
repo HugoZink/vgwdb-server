@@ -3,15 +3,21 @@ class Game {
         this.id = id;
         this.name = name;
         this.developer = developer;
-        this.weapons = weapons;
+        this.weapons = [];
 
         //Convert Neo4J Integer objects to regular JS numbers
         this.id = this.id.toNumber();
         this.developer.id = this.developer.id.toNumber();
         
-        if(this.weapons && this.weapons.length > 0 && this.weapons[0].id){
-            for(let weapon of this.weapons){
+        if(weapons){
+            for(let weapon of weapons){
+                //Ignore null values
+                if(weapon.id == null || weapon.id.low == null) {
+                    continue;
+                }
+
                 weapon.id = weapon.id.toNumber();
+                this.weapons.push(weapon);
             }
         }
 
