@@ -64,7 +64,10 @@ routes.get('/manufacturers/:id', function(req, res){
     });
 });
 
+//Create new manufacturer
 routes.post('/manufacturers', function(req, res){
+
+    res.contentType('application/json');
 
     let session = neodb.session();
 
@@ -107,6 +110,58 @@ routes.post('/manufacturers', function(req, res){
             }
         });
     }
+});
+
+//Update a manufacturer
+routes.put('/manufacturers/:id', function(req, res){
+
+    res.contentType('application/json');
+
+    let session = neodb.session();
+
+    let manufacturerId = Number(req.params.id);
+
+    //Find manufacturer, update its properties, then return the new manufacturer with its weapons.
+    let query = `MATCH (m:Manufacturer)
+    WHERE ID(m) = {id}
+    SET m.name = {name}, m.founded = {founded}
+    WITH m
+    OPTIONAL MATCH (m)-[:MANUFACTURES]->(w:Weapon)
+    RETURN ID(m) AS id, m.name AS name, m.founded AS founded,
+    collect({ID(w) AS id, w.name AS name}) AS weapons`;
+
+    session.run(query, { id: manufacturerId, name: req.body.name, founded: req.body.founded })
+    .then(function(result){
+
+        let record = result.records[0];
+
+        let manufacturer = new Manufacturer(record._fields[0], record._fields[1], record._fields[2], record._fields[3]);
+
+        res.status(202).json(response);
+
+        session.close();
+    });
+});
+
+//Delete a manufacturer
+routes.delete('/manufacturers/:id', function(req, res){
+
+    let session = neodb.session();
+
+    let manufacturerId = Number(req.params.id);
+
+    //Find and delete manufacturer
+    let query = `MATCH (m:Manufacturer)
+    WHERE ID(m) = {id}
+    DETACH DELETE m`;
+
+    session.run(query, {id: manufacturerId})
+    .then(function(result){
+
+        res.status(204).end();
+
+        session.close();
+    });
 });
 
 module.exports = routes;

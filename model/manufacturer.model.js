@@ -15,7 +15,7 @@ class Manufacturer {
         if(weapons){
             for(let weapon of weapons) {
                 //Filter out null values
-                if(!weapon.id) {
+                if(!weapon.id || !weapon.id.low) {
                     continue;
                 }
 
