@@ -108,6 +108,8 @@ routes.post('/manufacturers', function(req, res){
                     res.status(201).json(responseArr);
                 }
             }
+
+            session.close();
         });
     }
 });
@@ -128,7 +130,7 @@ routes.put('/manufacturers/:id', function(req, res){
     WITH m
     OPTIONAL MATCH (m)-[:MANUFACTURES]->(w:Weapon)
     RETURN ID(m) AS id, m.name AS name, m.founded AS founded,
-    collect({ID(w) AS id, w.name AS name}) AS weapons`;
+    collect({id: ID(w), name: w.name}) AS weapons`;
 
     session.run(query, { id: manufacturerId, name: req.body.name, founded: req.body.founded })
     .then(function(result){
@@ -137,7 +139,7 @@ routes.put('/manufacturers/:id', function(req, res){
 
         let manufacturer = new Manufacturer(record._fields[0], record._fields[1], record._fields[2], record._fields[3]);
 
-        res.status(202).json(response);
+        res.status(202).json(manufacturer);
 
         session.close();
     });
